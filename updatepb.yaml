@@ -1,0 +1,32 @@
+---
+- name: Get device set up
+  hosts: ub
+  become: yes
+  become_user: root
+  vars_files:
+    - secret
+  vars:
+    ansible_become_password: "{{ sudo_password }}"
+
+  tasks:
+    - name: Update cache
+      apt: 
+        state: latest
+    - name: Start sntp
+      systemd_service:
+        enabled: true
+        state: started
+        name: systemd-timedated.service
+    - name: Start timesyncd
+      systemd_service:
+        enabled: true
+        state: started
+        name: systemd-timesyncd.service
+    - name: Copy ntp file
+      template:
+        src: ./templates/timesyncd.conf
+        dest: /etc/systemd/timesyncd.conf
+    - name: Timedatectl
+      shell: |
+        timedatectl set-ntp true
+        timedatectl set-timezone America/Los_Angeles
